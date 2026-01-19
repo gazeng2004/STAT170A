@@ -20,7 +20,7 @@ edge_case = {"institution.region",
 
 db_host = "localhost"
 db_user = "<user>"
-db_password = "<<PASSWORD>>"
+db_password = "<Password>"
 database = "Stat170A"
 
 
@@ -39,7 +39,19 @@ def split_name_column(chunk, name_column='name'):
 
     return chunk
 
-def process_file(csv_files, columns, chunk_size=1000) -> None:
+def conference_added_columns(name):
+    if "ACM" in name:
+        acronym = "ACM"
+        if "IEEE" in name:
+            acronym += "+IEEE"
+    elif "IEEE" in name:
+        acronym = "IEEE"
+    else:
+        acronym = "other"
+    return acronym
+
+
+def process_file(csv_files, columns, table_name, chunk_size=1000) -> None:
     conn = mysql.connector.connect(
         host=db_host,
         user=db_user,
@@ -59,6 +71,8 @@ def process_file(csv_files, columns, chunk_size=1000) -> None:
         chunk = chunk.replace({np.nan: None})
         if table_name in ("CSrankings", "Generated_Author"):
             chunk = split_name_column(chunk, name_column='name')
+        elif table_name == "Conference_Ranking":
+            chunk["Academic_Society"] = chunk["Name"].apply(conference_added_columns)
         data = [tuple(row) for row in chunk.values]
         if i == 0:
             print(data[0])
@@ -101,6 +115,10 @@ def table_creater(csv_files, table_name) -> [str]:
             columns.append(f"`{col_name}` {sql_type}")
             col_names.append(col_name)
 
+    if table_name == "Conference_Ranking":
+        columns.append("`Academic_Society` TEXT")
+        col_names.append("Academic_Society")
+
     create_table_sql = f"CREATE TABLE IF NOT EXISTS `{table_name}` ({', '.join(columns)})"
     print(create_table_sql)
 
@@ -122,4 +140,4 @@ def table_creater(csv_files, table_name) -> [str]:
 if __name__ == '__main__':
     for files, table_name in csvfiles.items():
         columns = table_creater(files, table_name)
-        process_file(files, columns)
+        process_file(files, columns, table_name)
