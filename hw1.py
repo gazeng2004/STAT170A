@@ -28,10 +28,10 @@ def split_name_column(chunk, name_column='name'):
     name_parts = chunk[name_column].str.split()
 
     chunk['first_name'] = name_parts.str[0]
-    chunk['last_name'] = name_parts.str[-1]
     chunk['middle_name'] = name_parts.apply(
         lambda x: ' '.join(x[1:-1]) if len(x) > 2 else None
     )
+    chunk['last_name'] = name_parts.str[-1]
     chunk = chunk.drop(columns=[name_column])
 
     cols = chunk.columns
