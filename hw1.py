@@ -24,7 +24,7 @@ db_password = "<Password>"
 database = "Stat170A"
 
 
-def split_name_column(chunk, name_column='name'):
+def split_name_column(chunk, name_column='name', switch=True):
     name_parts = chunk[name_column].str.split()
 
     chunk['first_name'] = name_parts.str[0]
@@ -32,11 +32,11 @@ def split_name_column(chunk, name_column='name'):
         lambda x: ' '.join(x[1:-1]) if len(x) > 2 else None
     )
     chunk['last_name'] = name_parts.str[-1]
-    chunk = chunk.drop(columns=[name_column])
-
     cols = chunk.columns
-    chunk = chunk[list(cols[-3:]) + list(cols[:-3])]
 
+    if switch:
+        chunk = chunk.drop(columns=[name_column])
+        chunk = chunk[list(cols[-3:]) + list(cols[:-3])]
     return chunk
 
 def conference_added_columns(name):
